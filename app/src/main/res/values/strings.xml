@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">MeteoWidget</string>
+    <string-array name="cities">
+        <item>Warsaw</item>
+        <item>Lodz</item>
+    </string-array>
+
+    <string-array name="days">
+        <item>Today</item>
+        <item>Tomorrow</item>
+        <item>The next day</item>
+    </string-array>
+</resources>
