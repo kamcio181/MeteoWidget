@@ -44,7 +44,8 @@
         android:scaleType="fitXY"
         android:adjustViewBounds="true"
         android:layout_marginRight="4dp"
-        android:layout_marginLeft="4dp" />
+        android:layout_marginLeft="4dp"
+        android:layout_weight="1" />
 
     <LinearLayout
         android:orientation="horizontal"

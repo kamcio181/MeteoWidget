@@ -168,7 +168,7 @@ public class WidgetProvider extends AppWidgetProvider {
             int column = i == 0? 0: currentDay;
             for (int j = 0; j < enabledParts.length; j++) {
                 if (enabledParts[j]) {
-                    canvas.drawBitmap(loadBitmapFromFile(context, "" + currentCity + column + j), currentX,
+                    canvas.drawBitmap(loadBitmapFromFile(context, "" + currentCity + column + j), currentX, //TODO main activity single
                             currentY, null);
                     currentY += Constants.GRAPHS_HEIGHTS[j];
                 }
@@ -182,7 +182,7 @@ public class WidgetProvider extends AppWidgetProvider {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPreferredConfig = Bitmap.Config.ARGB_8888;
         Log.e(TAG, "loadPath " + context.getCacheDir().getPath() +"/" + name + ".jpg");
-        return BitmapFactory.decodeFile(context.getCacheDir().getPath() + "/" + name + ".jpg", options);
+        return BitmapFactory.decodeFile(context.getCacheDir().getPath() + "/" + name + ".jpg", options); //TODO file not found exc
     }
 
     private RemoteViews updateWidgetListView(Context context,
