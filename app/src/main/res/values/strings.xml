@@ -23,6 +23,6 @@
     <string-array name="days">
         <item>Today</item>
         <item>Tomorrow</item>
-        <item>The next day</item>
+        <item>Next day</item>
     </string-array>
 </resources>
