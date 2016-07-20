@@ -6,7 +6,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
-import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -150,7 +149,7 @@ public class Utils {
     }
 
     private static void saveBitmapToFile(Context context, Bitmap bitmap, String name){
-        File file = new File(Environment.getExternalStorageDirectory(), name + ".jpg");
+        File file = new File(context.getCacheDir(), name + ".jpg");
         Log.e(TAG, "savePath " + file.getAbsolutePath());
         if (file.exists())
             file.delete();
