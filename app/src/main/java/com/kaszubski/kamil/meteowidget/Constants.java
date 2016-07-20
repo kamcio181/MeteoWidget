@@ -8,11 +8,12 @@ public interface Constants {
     int MAX_CITY_VALUE = 1;
 
 //    int LEGEND = 0;
-    int MIN_DAY_VALUE = 1;
-//    int TODAY = 1;
-//    int TOMORROW = 2;
-//    int THE_NEXT_DAY = 3;
-    int MAX_DAY_VALUE = 3;
+//    int VALUES = 1;
+    int MIN_DAY_VALUE = 2;
+//    int TODAY = 2;
+//    int TOMORROW = 3;
+//    int THE_NEXT_DAY = 4;
+    int MAX_DAY_VALUE = 4;
 
     String PREFS_NAME = "MyPrefs";
     String SHOW_LEGEND = "Legend";
@@ -23,6 +24,6 @@ public interface Constants {
     String DAY = "Day";
     String LAST_UPDATE = "LastUpdate";
 
-    int[] DAY_WIDTHS = new int[]{68, 156, 155, 156};
+    int[] COLUMN_WIDTHS = new int[]{48, 20, 156, 155, 156};
     int[] GRAPHS_HEIGHTS = new int[]{25, 85, 89, 88};
 }

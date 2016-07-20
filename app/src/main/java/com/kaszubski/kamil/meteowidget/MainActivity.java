@@ -3,29 +3,26 @@ package com.kaszubski.kamil.meteowidget;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
+import android.widget.Switch;
 
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.Calendar;
 
 public class MainActivity extends AppCompatActivity implements CompoundButton.OnCheckedChangeListener{
     private static final String TAG = "MainActivity";
 
     private ImageView imageView, imageView2;
-    private CheckBox checkBox, checkBox2, checkBox3, checkBox4;
+    private CheckBox checkBox, checkBox2, checkBox3;
+    private Switch aSwitch;
     private SharedPreferences preferences;
     private boolean prefsOrBitmapWasChanged;
     private ConnectivityManager connectivityManager;
@@ -44,16 +41,16 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         checkBox = (CheckBox) findViewById(R.id.checkBox);
         checkBox2 = (CheckBox) findViewById(R.id.checkBox2);
         checkBox3 = (CheckBox) findViewById(R.id.checkBox3);
-        checkBox4 = (CheckBox) findViewById(R.id.checkBox4);
+        aSwitch = (Switch) findViewById(R.id.switch1);
         checkBox.setOnCheckedChangeListener(this);
         checkBox2.setOnCheckedChangeListener(this);
         checkBox3.setOnCheckedChangeListener(this);
-        checkBox4.setOnCheckedChangeListener(this);
+        aSwitch.setOnCheckedChangeListener(this);
 
         checkBox.setChecked(preferences.getBoolean(Constants.TEMPERATURE, true));
         checkBox2.setChecked(preferences.getBoolean(Constants.FALL, true));
         checkBox3.setChecked(preferences.getBoolean(Constants.WIND, true));
-        checkBox4.setChecked(preferences.getBoolean(Constants.SHOW_LEGEND, true));
+        aSwitch.setChecked(preferences.getBoolean(Constants.SHOW_LEGEND, true));
 
         if(!loadBitmapFromFile(Constants.WARSAW) || !loadBitmapFromFile(Constants.LODZ))
             refresh();
@@ -181,7 +178,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
                     prefsOrBitmapWasChanged = true;
                 }
                 break;
-            case R.id.checkBox4:
+            case R.id.switch1:
                 preferences.edit().putBoolean(Constants.SHOW_LEGEND, isChecked).apply();
                 prefsOrBitmapWasChanged = true;
                 break;

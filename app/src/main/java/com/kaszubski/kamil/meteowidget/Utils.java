@@ -6,6 +6,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
+import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -121,27 +122,35 @@ public class Utils {
 
     private static void splitAndSaveBitmaps(Context context, Bitmap bitmap, int city){
         saveBitmapToFile(context, bitmap, String.valueOf(city)); //save in background
-        Bitmap[] dayGraphs = new Bitmap[4];
-        Bitmap[][] graphParts = new Bitmap[4][4];
-        dayGraphs[0] = Bitmap.createBitmap(bitmap, 0, 0, Constants.DAY_WIDTHS[0], bitmap.getHeight());
-        dayGraphs[1] = Bitmap.createBitmap(bitmap, Constants.DAY_WIDTHS[0]+2, 0, Constants.DAY_WIDTHS[1], bitmap.getHeight());
-        dayGraphs[2] = Bitmap.createBitmap(bitmap, Constants.DAY_WIDTHS[0] + Constants.DAY_WIDTHS[1]+13, 0, Constants.DAY_WIDTHS[2], bitmap.getHeight());
-        dayGraphs[3] = Bitmap.createBitmap(bitmap, Constants.DAY_WIDTHS[0] + Constants.DAY_WIDTHS[1]+25 + Constants.DAY_WIDTHS[2], 0, Constants.DAY_WIDTHS[3], bitmap.getHeight());
+        Bitmap[] columns = new Bitmap[5];
+        Bitmap[][] graphParts = new Bitmap[5][4];
+
+        columns[0] = Bitmap.createBitmap(bitmap, 0, 0, Constants.COLUMN_WIDTHS[0], bitmap.getHeight()); //Legend
+        columns[1] = Bitmap.createBitmap(bitmap, Constants.COLUMN_WIDTHS[0], 0, //Values
+                Constants.COLUMN_WIDTHS[1], bitmap.getHeight());
+        columns[2] = Bitmap.createBitmap(bitmap, Constants.COLUMN_WIDTHS[0] +
+                Constants.COLUMN_WIDTHS[1] + 2, 0, Constants.COLUMN_WIDTHS[3], bitmap.getHeight()); //Today
+        columns[3] = Bitmap.createBitmap(bitmap, Constants.COLUMN_WIDTHS[0] +
+                Constants.COLUMN_WIDTHS[1] + Constants.COLUMN_WIDTHS[2] + 13, 0, //Tomorrow
+                Constants.COLUMN_WIDTHS[3], bitmap.getHeight());
+        columns[4] = Bitmap.createBitmap(bitmap, Constants.COLUMN_WIDTHS[0] +
+                Constants.COLUMN_WIDTHS[1] + Constants.COLUMN_WIDTHS[2] +
+                Constants.COLUMN_WIDTHS[3] + 25, 0, Constants.COLUMN_WIDTHS[4], bitmap.getHeight());//Next day
 
         for(int i = 0; i< graphParts.length; i++) {
-            graphParts[i][0] = Bitmap.createBitmap(dayGraphs[i], 0, 30, dayGraphs[i].getWidth(), 25);
+            graphParts[i][0] = Bitmap.createBitmap(columns[i], 0, 30, columns[i].getWidth(), 25);
             saveBitmapToFile(context, graphParts[i][0], "" + city + i +0);
-            graphParts[i][1] = Bitmap.createBitmap(dayGraphs[i], 0, 55, dayGraphs[i].getWidth(), 85);
+            graphParts[i][1] = Bitmap.createBitmap(columns[i], 0, 55, columns[i].getWidth(), 85);
             saveBitmapToFile(context, graphParts[i][1], "" + city + i +1);
-            graphParts[i][2] = Bitmap.createBitmap(dayGraphs[i], 0, 140, dayGraphs[i].getWidth(), 89);
+            graphParts[i][2] = Bitmap.createBitmap(columns[i], 0, 140, columns[i].getWidth(), 89);
             saveBitmapToFile(context, graphParts[i][2], "" + city + i +2);
-            graphParts[i][3] = Bitmap.createBitmap(dayGraphs[i], 0, 312, dayGraphs[i].getWidth(), 88);
+            graphParts[i][3] = Bitmap.createBitmap(columns[i], 0, 312, columns[i].getWidth(), 88);
             saveBitmapToFile(context, graphParts[i][3], "" + city + i +3);
         }
     }
 
     private static void saveBitmapToFile(Context context, Bitmap bitmap, String name){
-        File file = new File(context.getCacheDir(), name + ".jpg");
+        File file = new File(Environment.getExternalStorageDirectory(), name + ".jpg");
         Log.e(TAG, "savePath " + file.getAbsolutePath());
         if (file.exists())
             file.delete();

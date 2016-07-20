@@ -34,7 +34,7 @@ public class WidgetProvider extends AppWidgetProvider {
     private boolean[] enabledParts;
     private boolean showLegend;
 
-    private Bitmap[][] bitmaps = new Bitmap[2][4];
+    private Bitmap[][] bitmaps = new Bitmap[3][4];
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -163,9 +163,9 @@ public class WidgetProvider extends AppWidgetProvider {
 
     private Bitmap mergeBitmap(){
         int height = 0;
-        int width = Constants.DAY_WIDTHS[currentDay];
+        int width = Constants.COLUMN_WIDTHS[1] + Constants.COLUMN_WIDTHS[currentDay]; //Values + day
         if(showLegend)
-            width += Constants.DAY_WIDTHS[0];
+            width += Constants.COLUMN_WIDTHS[0]; // Legend is optional
         for(int i = 0; i<enabledParts.length; i++){
             if(enabledParts[i]) {
                 Log.e(TAG, "HEIGHT " + i + " " + height);
@@ -180,15 +180,16 @@ public class WidgetProvider extends AppWidgetProvider {
         Canvas canvas = new Canvas(resultGraph);
 
         float currentX = 0;
-        for(int i = showLegend? 0 : 1; i < 2; i++) {
+        for(int i = showLegend? 0 : 1; i < 3; i++) {
             float currentY = 0;
             for (int j = 0; j < enabledParts.length; j++) {
                 if (enabledParts[j]) {
-                    canvas.drawBitmap(bitmaps[i][j], currentX, currentY, null);
+                    if((i != 0 || j != 0) && (i != 1 || j != 0))
+                        canvas.drawBitmap(bitmaps[i][j], currentX, currentY, null);
                     currentY += Constants.GRAPHS_HEIGHTS[j];
                 }
             }
-            currentX += Constants.DAY_WIDTHS[0];
+            currentX += Constants.COLUMN_WIDTHS[i];
         }
         return resultGraph;
     }
@@ -197,15 +198,16 @@ public class WidgetProvider extends AppWidgetProvider {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPreferredConfig = Bitmap.Config.ARGB_8888;
 
-        for(int i = showLegend? 0 : 1; i < 2; i++) {
-            int column = i == 0? 0: currentDay;
+        for(int i = showLegend? 0 : 1; i < 3; i++) {
+            int column = i < Constants.MIN_DAY_VALUE? i: currentDay;
             for (int j = 0; j <bitmaps[i].length; j++){
                 if(!(new File(context.getCacheDir(), "" + currentCity + "" + column + "" + j + ".jpg").exists())){
                     Log.e(TAG, "FILE NOT EXISTS");
                     return false;
                 } else {
-                    bitmaps[i][j] = BitmapFactory.decodeFile(context.getCacheDir().getPath() + "/"
-                            + currentCity + column + j + ".jpg", options);
+                    if((i != 0 || j != 0) && (i != 1 || j != 0))
+                        bitmaps[i][j] = BitmapFactory.decodeFile(context.getCacheDir().getPath() + "/"
+                                + currentCity + column + j + ".jpg", options);
                 }
             }
         }
@@ -228,7 +230,7 @@ public class WidgetProvider extends AppWidgetProvider {
             views = new RemoteViews(context.getPackageName(), R.layout.widget);
 
             views.setTextViewText(R.id.textView4, context.getResources().getStringArray(R.array.cities)[currentCity]);
-            views.setTextViewText(R.id.textView5, context.getResources().getStringArray(R.array.days)[currentDay - 1]); // -1 because legend has index 0
+            views.setTextViewText(R.id.textView5, context.getResources().getStringArray(R.array.days)[currentDay - 2]); // -2 because legend has index 0 and values has 1
 
             views.setImageViewBitmap(R.id.imageView5, mergeBitmap());
 
