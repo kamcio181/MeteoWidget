@@ -9,15 +9,19 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.util.Log;
 import android.widget.RemoteViews;
+
+import java.io.File;
 
 public class WidgetProvider extends AppWidgetProvider {
     public static final String NEXT_DAY = "android.appwidget.action.NEXT_DAY";
     public static final String PREVIOUS_DAY = "android.appwidget.action.PREVIOUS_DAY";
     public static final String NEXT_CITY = "android.appwidget.action.NEXT_CITY";
     public static final String PREVIOUS_CITY = "android.appwidget.action.PREVIOUS_CITY";
-    public static final String REFRESH = "android.appwidget.action.REFRESH"; //TODO
+    public static final String REFRESH = "android.appwidget.action.REFRESH";
     public static final String SHOW_DATE = "android.appwidget.action.SHOW_DATE";
 
     private static final String TAG = "WidgetProvider";
@@ -29,6 +33,8 @@ public class WidgetProvider extends AppWidgetProvider {
     private int currentCity;
     private boolean[] enabledParts;
     private boolean showLegend;
+
+    private Bitmap[][] bitmaps = new Bitmap[2][4];
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -64,7 +70,8 @@ public class WidgetProvider extends AppWidgetProvider {
 
                 preferences.edit().putInt(Constants.DAY + appWidgetId, currentDay).apply();
 
-                updateWidget(context, appWidgetId);
+                //updateWidget(context, appWidgetId);
+                Utils.updateAllWidgets(context);
                 break;
 
             case PREVIOUS_DAY:
@@ -81,8 +88,7 @@ public class WidgetProvider extends AppWidgetProvider {
                 break;
 
             case REFRESH:
-                //TODO refresh
-                Utils.showToast(context, "Refresh button clicked");
+                refresh(context);
                 break;
         }
         super.onReceive(context, intent);
@@ -104,6 +110,16 @@ public class WidgetProvider extends AppWidgetProvider {
         super.onUpdate(context, appWidgetManager, appWidgetIds);
     }
 
+    private void refresh(Context context){
+        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+        if(networkInfo != null && networkInfo.isConnected()) {
+            Utils.downloadGraph(context, Constants.WARSAW, null);
+            Utils.downloadGraph(context, Constants.LODZ, null);
+        } else
+            Utils.showToast(context, context.getString(R.string.check_internet_connection));
+    }
+
     @Override
     public void onDeleted(Context context, int[] appWidgetIds) {
         super.onDeleted(context, appWidgetIds);
@@ -123,9 +139,10 @@ public class WidgetProvider extends AppWidgetProvider {
         if(enabledParts == null)
             enabledParts = new boolean[4];
         showLegend = preferences.getBoolean(Constants.SHOW_LEGEND, true);
-        lastUpdate = preferences.getString(Constants.LAST_UPDATE, "unknown");
+        lastUpdate = preferences.getString(Constants.LAST_UPDATE, context.getString(R.string.unknown));
         currentDay = preferences.getInt(Constants.DAY + widgetId, Constants.MIN_DAY_VALUE);
         currentCity = preferences.getInt(Constants.CITY + widgetId, Constants.MIN_CITY_VALUE);
+        Log.v(TAG, "widget " + widgetId + " day " + currentDay + " city " +currentCity);
         enabledParts[0] = true;
         enabledParts[1] = preferences.getBoolean(Constants.TEMPERATURE, true);
         enabledParts[2] = preferences.getBoolean(Constants.FALL, true);
@@ -144,7 +161,7 @@ public class WidgetProvider extends AppWidgetProvider {
         return PendingIntent.getActivity(context, appWidgetId, configIntent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
-    private Bitmap mergeBitmap(Context context){
+    private Bitmap mergeBitmap(){
         int height = 0;
         int width = Constants.DAY_WIDTHS[currentDay];
         if(showLegend)
@@ -157,7 +174,7 @@ public class WidgetProvider extends AppWidgetProvider {
         }
 
         if(height == 0 || width == 0)
-            return null; //TODO empty view
+            return null;
 
         Bitmap resultGraph = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(resultGraph);
@@ -165,11 +182,9 @@ public class WidgetProvider extends AppWidgetProvider {
         float currentX = 0;
         for(int i = showLegend? 0 : 1; i < 2; i++) {
             float currentY = 0;
-            int column = i == 0? 0: currentDay;
             for (int j = 0; j < enabledParts.length; j++) {
                 if (enabledParts[j]) {
-                    canvas.drawBitmap(loadBitmapFromFile(context, "" + currentCity + column + j), currentX, //TODO main activity single
-                            currentY, null);
+                    canvas.drawBitmap(bitmaps[i][j], currentX, currentY, null);
                     currentY += Constants.GRAPHS_HEIGHTS[j];
                 }
             }
@@ -178,41 +193,61 @@ public class WidgetProvider extends AppWidgetProvider {
         return resultGraph;
     }
 
-    private Bitmap loadBitmapFromFile(Context context, String name){
+    private boolean loadBitmapsFromFile(Context context){
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-        Log.e(TAG, "loadPath " + context.getCacheDir().getPath() +"/" + name + ".jpg");
-        return BitmapFactory.decodeFile(context.getCacheDir().getPath() + "/" + name + ".jpg", options); //TODO file not found exc
+
+        for(int i = showLegend? 0 : 1; i < 2; i++) {
+            int column = i == 0? 0: currentDay;
+            for (int j = 0; j <bitmaps[i].length; j++){
+                if(!(new File(context.getCacheDir(), "" + currentCity + "" + column + "" + j + ".jpg").exists())){
+                    Log.e(TAG, "FILE NOT EXISTS");
+                    return false;
+                } else {
+                    bitmaps[i][j] = BitmapFactory.decodeFile(context.getCacheDir().getPath() + "/"
+                            + currentCity + column + j + ".jpg", options);
+                }
+            }
+        }
+        return true;
     }
 
     private RemoteViews updateWidgetListView(Context context,
                                              int appWidgetId) {
-        if(enabledParts == null)
-            getConfiguration(context, appWidgetId);
+        RemoteViews views;
 
-        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget);
+        getConfiguration(context, appWidgetId);
 
-        views.setTextViewText(R.id.textView4, context.getResources().getStringArray(R.array.cities)[currentCity]);
-        views.setTextViewText(R.id.textView5, context.getResources().getStringArray(R.array.days)[currentDay-1]); // -1 because legend has index 0
+        if(!loadBitmapsFromFile(context)){ //empty view
+            views = new RemoteViews(context.getPackageName(), R.layout.empty_view);
 
-        views.setImageViewBitmap(R.id.imageView5, mergeBitmap(context));
+            views.setOnClickPendingIntent(R.id.textView6, getPendingIntentWithAction(context,
+                    new Intent(context, WidgetProvider.class), appWidgetId, REFRESH));
+        } else {
 
-        views.setOnClickPendingIntent(R.id.textView4, getPendingIntentWithAction(context,
-                new Intent(context, WidgetProvider.class), appWidgetId, REFRESH));
-        views.setOnClickPendingIntent(R.id.textView5, getPendingIntentWithAction(context,
-                new Intent(context, WidgetProvider.class), appWidgetId, SHOW_DATE));
+            views = new RemoteViews(context.getPackageName(), R.layout.widget);
 
-        views.setOnClickPendingIntent(R.id.imageView3, getPendingIntentWithAction(context,
-                new Intent(context, WidgetProvider.class), appWidgetId, PREVIOUS_CITY));
-        views.setOnClickPendingIntent(R.id.imageView4, getPendingIntentWithAction(context,
-                new Intent(context, WidgetProvider.class), appWidgetId, NEXT_CITY));
-        views.setOnClickPendingIntent(R.id.imageView6, getPendingIntentWithAction(context,
-                new Intent(context, WidgetProvider.class), appWidgetId, PREVIOUS_DAY));
-        views.setOnClickPendingIntent(R.id.imageView7, getPendingIntentWithAction(context,
-                new Intent(context, WidgetProvider.class), appWidgetId, NEXT_DAY));
+            views.setTextViewText(R.id.textView4, context.getResources().getStringArray(R.array.cities)[currentCity]);
+            views.setTextViewText(R.id.textView5, context.getResources().getStringArray(R.array.days)[currentDay - 1]); // -1 because legend has index 0
 
-        views.setOnClickPendingIntent(R.id.imageView5, getOpenAppPendingIntent(context, appWidgetId));
+            views.setImageViewBitmap(R.id.imageView5, mergeBitmap());
 
+            views.setOnClickPendingIntent(R.id.textView4, getPendingIntentWithAction(context,
+                    new Intent(context, WidgetProvider.class), appWidgetId, REFRESH));
+            views.setOnClickPendingIntent(R.id.textView5, getPendingIntentWithAction(context,
+                    new Intent(context, WidgetProvider.class), appWidgetId, SHOW_DATE));
+
+            views.setOnClickPendingIntent(R.id.imageView3, getPendingIntentWithAction(context,
+                    new Intent(context, WidgetProvider.class), appWidgetId, PREVIOUS_CITY));
+            views.setOnClickPendingIntent(R.id.imageView4, getPendingIntentWithAction(context,
+                    new Intent(context, WidgetProvider.class), appWidgetId, NEXT_CITY));
+            views.setOnClickPendingIntent(R.id.imageView6, getPendingIntentWithAction(context,
+                    new Intent(context, WidgetProvider.class), appWidgetId, PREVIOUS_DAY));
+            views.setOnClickPendingIntent(R.id.imageView7, getPendingIntentWithAction(context,
+                    new Intent(context, WidgetProvider.class), appWidgetId, NEXT_DAY));
+
+            views.setOnClickPendingIntent(R.id.imageView5, getOpenAppPendingIntent(context, appWidgetId));
+        }
         Log.v(TAG, "updateWidgetListView");
 
         return views;

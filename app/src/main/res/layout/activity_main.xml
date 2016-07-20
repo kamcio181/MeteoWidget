@@ -17,35 +17,35 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="Widget graphs"
+            android:text="@string/widget_graphs"
             android:id="@+id/textView"
             android:textColor="@color/colorPrimary" />
 
         <CheckBox
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Legend"
+            android:text="@string/legend"
             android:id="@+id/checkBox4"
             android:checked="true" />
 
         <CheckBox
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Temperature"
+            android:text="@string/temperature"
             android:id="@+id/checkBox"
             android:checked="true" />
 
         <CheckBox
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Fall"
+            android:text="@string/fall"
             android:id="@+id/checkBox2"
             android:checked="true" />
 
         <CheckBox
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Wind"
+            android:text="@string/wind"
             android:id="@+id/checkBox3"
             android:checked="true" />
 
@@ -53,7 +53,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="Warszawa"
+            android:text="@string/warsaw"
             android:id="@+id/textView2"
             android:textColor="@color/colorPrimary"
             android:layout_marginBottom="16dp" />
@@ -71,7 +71,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="Łódź"
+            android:text="@string/lodz"
             android:id="@+id/textView3"
             android:textColor="@color/colorPrimary"
             android:layout_marginTop="10dp"

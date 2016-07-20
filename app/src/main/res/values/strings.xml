@@ -1,5 +1,19 @@
 <resources>
     <string name="app_name">MeteoWidget</string>
+    <string name="refresh">Refresh</string>
+    <string name="meteo_graphs_not_found_nclick_here_to_refresh">Meteo graphs not found.\nClick here to refresh</string>
+    <string name="widget_graphs">Widget graphs</string>
+    <string name="legend">Legend</string>
+    <string name="temperature">Temperature</string>
+    <string name="fall">Fall</string>
+    <string name="wind">Wind</string>
+    <string name="warsaw">Warsaw</string>
+    <string name="lodz">Lodz</string>
+    <string name="check_internet_connection">Check internet connection</string>
+    <string name="one_graph_has_to_be_selected_at_least">One graph has to be selected at least</string>
+    <string name="graph_refreshed">Graph refreshed</string>
+    <string name="refresh_failed">Refresh failed</string>
+    <string name="unknown">unknown</string>
     <string-array name="cities">
         <item>Warsaw</item>
         <item>Lodz</item>

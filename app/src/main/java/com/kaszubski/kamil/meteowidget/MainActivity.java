@@ -21,7 +21,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Calendar;
 
-public class MainActivity extends AppCompatActivity implements CompoundButton.OnCheckedChangeListener{ //TODO check permission and internet connection
+public class MainActivity extends AppCompatActivity implements CompoundButton.OnCheckedChangeListener{
     private static final String TAG = "MainActivity";
 
     private ImageView imageView, imageView2;
@@ -129,7 +129,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
                 }
             });
         } else
-            Utils.showToast(this, "Check internet connection");
+            Utils.showToast(this, getString(R.string.check_internet_connection));
     }
 
     private void saveDate() {
@@ -192,7 +192,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         if(checkBox.isChecked() || checkBox2.isChecked() || checkBox3.isChecked())
             return true;
 
-        Utils.showToast(this, "One graph has to be selected at least");
+        Utils.showToast(this, getString(R.string.one_graph_has_to_be_selected_at_least));
         return false;
     }
 }
