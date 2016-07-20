@@ -39,7 +39,7 @@ public class Utils {
     }
 
     public static void downloadGraph(Context context, int city, OnRefreshTaskFinish listener){
-
+        Utils.showToast(context, context.getString(R.string.downloading) + "...");
         new ImageDownloaderTask(context, city, listener).execute(getUrl(city));
     }
 

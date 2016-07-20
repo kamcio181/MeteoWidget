@@ -14,6 +14,7 @@
     <string name="graph_refreshed">Graph refreshed</string>
     <string name="refresh_failed">Refresh failed</string>
     <string name="unknown">unknown</string>
+    <string name="downloading">Downloading</string>
     <string-array name="cities">
         <item>Warsaw</item>
         <item>Lodz</item>
