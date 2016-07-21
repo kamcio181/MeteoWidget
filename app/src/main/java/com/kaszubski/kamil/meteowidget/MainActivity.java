@@ -3,8 +3,6 @@ package com.kaszubski.kamil.meteowidget;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -15,8 +13,6 @@ import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.Switch;
 
-import java.util.Calendar;
-
 public class MainActivity extends AppCompatActivity implements CompoundButton.OnCheckedChangeListener{
     private static final String TAG = "MainActivity";
 
@@ -25,8 +21,6 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
     private Switch aSwitch;
     private SharedPreferences preferences;
     private boolean prefsOrBitmapWasChanged;
-    private ConnectivityManager connectivityManager;
-    private boolean daySaved = false;
 
 
     @Override
@@ -34,7 +28,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         preferences = getSharedPreferences(Constants.PREFS_NAME, MODE_PRIVATE);
-        connectivityManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+
 
         imageView = (ImageView) findViewById(R.id.imageView);
         imageView2 = (ImageView) findViewById(R.id.imageView2);
@@ -51,6 +45,16 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         checkBox2.setChecked(preferences.getBoolean(Constants.FALL, true));
         checkBox3.setChecked(preferences.getBoolean(Constants.WIND, true));
         aSwitch.setChecked(preferences.getBoolean(Constants.SHOW_LEGEND, true));
+        String lastUpdate =preferences.getString(Constants.LAST_UPDATE, getString(R.string.unknown));
+        if(getSupportActionBar() != null)
+            getSupportActionBar().setSubtitle(getString(R.string.last_updated) + ": " + lastUpdate);
+
+        for(int i = 0; i < Constants.CITY_URL.length; i++){ // if more cities change it to array
+            if(!loadBitmapFromFile(i)) {
+                refresh();
+                break;
+            }
+        }
 
         if(!loadBitmapFromFile(Constants.WARSAW) || !loadBitmapFromFile(Constants.LODZ))
             refresh();
@@ -105,35 +109,16 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
     }
 
     private void refresh(){
-        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-        if(networkInfo != null && networkInfo.isConnected()) {
-            Utils.downloadGraph(this, Constants.WARSAW, new Utils.OnRefreshTaskFinish() {
-                @Override
-                public void onRefreshTaskFinished(Bitmap bitmap) {
-                    if (bitmap != null) {
-                        setImageViewBitmap(bitmap, Constants.WARSAW);
-                        saveDate();
-                    }
+        Utils.downloadGraphs(this, new Utils.OnRefreshTaskFinish() {
+            @Override
+            public void onRefreshTaskFinished(Bitmap[] bitmaps) {
+                if(bitmaps != null){
+                    for(int i = 0; i < bitmaps.length; i++)
+                    setImageViewBitmap(bitmaps[i], i);
                 }
-            });
-            Utils.downloadGraph(this, Constants.LODZ, new Utils.OnRefreshTaskFinish() {
-                @Override
-                public void onRefreshTaskFinished(Bitmap bitmap) {
-                    if (bitmap != null) {
-                        setImageViewBitmap(bitmap, Constants.LODZ);
-                        saveDate();
-                    }
-                }
-            });
-        } else
-            Utils.showToast(this, getString(R.string.check_internet_connection));
-    }
+            }
+        });
 
-    private void saveDate() {
-        if (!daySaved) {
-            preferences.edit().putString(Constants.LAST_UPDATE, String.format("%1$td.%1$tm.%1$tY", Calendar.getInstance())).apply();
-            daySaved = true;
-        }
     }
 
     private void setImageViewBitmap(Bitmap bitmap, int city){
@@ -158,9 +143,6 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
                     preferences.edit().putBoolean(Constants.TEMPERATURE, isChecked).apply();
                     prefsOrBitmapWasChanged = true;
                 }
-
-//                enabledParts[1] = isChecked;
-//                new ImageMarge().execute();
                 break;
             case R.id.checkBox2:
                 if(!isChecked && !isAnyCheckBoxChecked()){

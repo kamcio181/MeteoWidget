@@ -3,8 +3,11 @@ package com.kaszubski.kamil.meteowidget;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.Toast;
@@ -19,12 +22,20 @@ import java.util.Calendar;
 public class Utils {
     private static final String TAG = "Utils";
     private static Toast toast;
+    private static ConnectivityManager connectivityManager;
+    private static SharedPreferences preferences;
 
     public static void showToast(Context context, String message){
         if(toast != null)
             toast.cancel();
         toast = Toast.makeText(context, message, Toast.LENGTH_SHORT);
         toast.show();
+    }
+
+    private static void saveDate(Context context) {
+        if(preferences == null)
+            preferences = context.getSharedPreferences(Constants.PREFS_NAME, Context.MODE_PRIVATE);
+            preferences.edit().putString(Constants.LAST_UPDATE, String.format("%1$td.%1$tm.%1$tY", Calendar.getInstance())).apply();
     }
 
     public static void updateAllWidgets(Context context){
@@ -35,55 +46,58 @@ public class Utils {
     }
 
     public interface OnRefreshTaskFinish {
-        void onRefreshTaskFinished(Bitmap bitmap);
+        void onRefreshTaskFinished(Bitmap[] bitmaps);
     }
 
-    public static void downloadGraph(Context context, int city, OnRefreshTaskFinish listener){
-        Utils.showToast(context, context.getString(R.string.downloading) + "...");
-        new ImageDownloaderTask(context, city, listener).execute(getUrl(city));
+    public static void downloadGraphs(Context context, OnRefreshTaskFinish listener){
+        if(connectivityManager == null)
+            connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+        if(networkInfo != null && networkInfo.isConnected()) {
+            showToast(context, context.getString(R.string.downloading) + "...");
+            new ImagesDownloaderTask(context, listener).execute();
+        } else
+            showToast(context, context.getString(R.string.check_internet_connection));
     }
 
-    public static String getUrl(int city){
-        String date = String.format("%1$tY%1$tm%1$td", Calendar.getInstance());
-        switch (city){
-            default:
-            case Constants.WARSAW:
-                return  "http://www.meteo.pl/um/metco/mgram_pict.php?ntype=0u&fdate=" + date + "00&row=406&col=250&lang=pl"; //TODO other hours 
-            case Constants.LODZ:
-                return  "http://www.meteo.pl/um/metco/mgram_pict.php?ntype=0u&fdate=" + date + "00&row=418&col=223&lang=pl";
-        }
-    }
-
-    private static class ImageDownloaderTask extends AsyncTask<String, Void, Bitmap> {
+    private static class ImagesDownloaderTask extends AsyncTask<Void, Void, Boolean> {
         private Context context;
-        private int city;
         private OnRefreshTaskFinish listener;
+        private Bitmap[] bitmaps;
 
-        public ImageDownloaderTask(Context context, int city, OnRefreshTaskFinish listener) {
+        public ImagesDownloaderTask(Context context, OnRefreshTaskFinish listener) {
             this.context = context;
-            this.city = city;
             this.listener = listener;
         }
 
         @Override
-        protected Bitmap doInBackground(String... params) {
-            Bitmap bitmap = downloadBitmap(params[0]);
+        protected Boolean doInBackground(Void... params) {
+            String date = String.format("%1$tY%1$tm%1$td", Calendar.getInstance()); // if you want to allow choose cities use array list with dynamically added desired city numbers
+            Bitmap bitmap;
+            for(int i = 0; i < Constants.CITY_URL.length; i++){
+                bitmap = downloadBitmap(Constants.URL_CONST + date + Constants.CITY_URL[i]);
+                if (isCancelled() || bitmap == null || bitmap.getWidth() < 400 || bitmap.getHeight() < 400) {
+                    bitmaps = null;
+                    return false;
+                } else {
+                    if(bitmaps == null)
+                        bitmaps = new Bitmap[Constants.CITY_URL.length];
 
-            if (isCancelled() || bitmap == null) {
-                return null;
-            } else {
-                splitAndSaveBitmaps(context, bitmap, city);
-                return bitmap;
+                    bitmaps[i] = bitmap;
+                    splitAndSaveBitmaps(context, bitmap, i);
+                }
             }
+            saveDate(context);
+            return true;
         }
 
         @Override
-        protected void onPostExecute(Bitmap bitmap) {
-            showToast(context, bitmap != null? context.getString(R.string.graph_refreshed) : context.getString(R.string.refresh_failed));
-
+        protected void onPostExecute(Boolean result) {
+            showToast(context, result? context.getString(R.string.graphs_refreshed) : context.getString(R.string.refresh_failed));
             if(listener != null)
-                listener.onRefreshTaskFinished(bitmap);
-            else if(bitmap != null)
+                listener.onRefreshTaskFinished(bitmaps);
+            else if(result)
                 updateAllWidgets(context);
         }
     }

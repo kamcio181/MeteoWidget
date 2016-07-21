@@ -9,8 +9,6 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.util.Log;
 import android.widget.RemoteViews;
 
@@ -48,7 +46,7 @@ public class WidgetProvider extends AppWidgetProvider {
         switch (intent.getAction()) {
             case NEXT_CITY:
                 Log.v(TAG, "next city");
-                currentCity = currentCity == Constants.MAX_CITY_VALUE? Constants.MIN_CITY_VALUE : currentCity + 1;
+                currentCity = currentCity == Constants.CITY_URL.length-1? Constants.MIN_CITY_VALUE : currentCity + 1;
 
                 preferences.edit().putInt(Constants.CITY + appWidgetId, currentCity).apply();
 
@@ -57,7 +55,7 @@ public class WidgetProvider extends AppWidgetProvider {
 
             case PREVIOUS_CITY:
                 Log.v(TAG, "previous city");
-                currentCity = currentCity == Constants.MIN_CITY_VALUE? Constants.MAX_CITY_VALUE : currentCity - 1;
+                currentCity = currentCity == Constants.MIN_CITY_VALUE? Constants.CITY_URL.length-1 : currentCity - 1;
 
                 preferences.edit().putInt(Constants.CITY + appWidgetId, currentCity).apply();
 
@@ -84,7 +82,7 @@ public class WidgetProvider extends AppWidgetProvider {
                 break;
 
             case SHOW_DATE:
-                Utils.showToast(context, "Last updated: " + lastUpdate);
+                Utils.showToast(context, context.getString(R.string.last_updated)+": " + lastUpdate);
                 break;
 
             case REFRESH:
@@ -111,13 +109,7 @@ public class WidgetProvider extends AppWidgetProvider {
     }
 
     private void refresh(Context context){
-        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-        if(networkInfo != null && networkInfo.isConnected()) {
-            Utils.downloadGraph(context, Constants.WARSAW, null);
-            Utils.downloadGraph(context, Constants.LODZ, null);
-        } else
-            Utils.showToast(context, context.getString(R.string.check_internet_connection));
+        Utils.downloadGraphs(context, null);
     }
 
     @Override

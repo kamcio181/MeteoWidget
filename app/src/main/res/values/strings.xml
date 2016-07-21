@@ -11,11 +11,12 @@
     <string name="lodz">Lodz</string>
     <string name="check_internet_connection">Check internet connection</string>
     <string name="one_graph_has_to_be_selected_at_least">One graph has to be selected at least</string>
-    <string name="graph_refreshed">Graph refreshed</string>
+    <string name="graphs_refreshed">Graphs refreshed</string>
     <string name="refresh_failed">Refresh failed</string>
     <string name="unknown">unknown</string>
     <string name="downloading">Downloading</string>
     <string name="widget">Widget</string>
+    <string name="last_updated">Last updated</string>
     <string-array name="cities">
         <item>Warsaw</item>
         <item>Lodz</item>
