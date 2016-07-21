@@ -24,6 +24,7 @@ public class Utils {
     private static Toast toast;
     private static ConnectivityManager connectivityManager;
     private static SharedPreferences preferences;
+    private static ImagesDownloaderTask task;
 
     public static void showToast(Context context, String message){
         if(toast != null)
@@ -55,8 +56,12 @@ public class Utils {
 
         NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
         if(networkInfo != null && networkInfo.isConnected()) {
+            if (task != null && task.getStatus().equals(AsyncTask.Status.RUNNING))
+                task.cancel(true);
+
             showToast(context, context.getString(R.string.downloading) + "...");
-            new ImagesDownloaderTask(context, listener).execute();
+            task = new ImagesDownloaderTask(context, listener);
+            task.execute();
         } else
             showToast(context, context.getString(R.string.check_internet_connection));
     }
@@ -163,7 +168,7 @@ public class Utils {
     }
 
     private static void saveBitmapToFile(Context context, Bitmap bitmap, String name){
-        File file = new File(context.getCacheDir(), name + ".jpg");
+        File file = new File(context.getCacheDir(), name + Constants.IMAGE_EXTENSION);
         Log.e(TAG, "savePath " + file.getAbsolutePath());
         if (file.exists())
             file.delete();

@@ -45,9 +45,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         checkBox2.setChecked(preferences.getBoolean(Constants.FALL, true));
         checkBox3.setChecked(preferences.getBoolean(Constants.WIND, true));
         aSwitch.setChecked(preferences.getBoolean(Constants.SHOW_LEGEND, true));
-        String lastUpdate =preferences.getString(Constants.LAST_UPDATE, getString(R.string.unknown));
-        if(getSupportActionBar() != null)
-            getSupportActionBar().setSubtitle(getString(R.string.last_updated) + ": " + lastUpdate);
+        setLastUpdateField();
 
         for(int i = 0; i < Constants.CITY_URL.length; i++){ // if more cities change it to array
             if(!loadBitmapFromFile(i)) {
@@ -97,11 +95,17 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         return super.onOptionsItemSelected(item);
     }
 
+    private void setLastUpdateField(){
+        String lastUpdate =preferences.getString(Constants.LAST_UPDATE, getString(R.string.unknown));
+        if(getSupportActionBar() != null)
+            getSupportActionBar().setSubtitle(getString(R.string.last_updated) + ": " + lastUpdate);
+    }
+
     private boolean loadBitmapFromFile(int city){
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-        Log.e(TAG, "loadPath " + getCacheDir().getPath() +"/" + city + ".jpg");
-        Bitmap bitmap = BitmapFactory.decodeFile(getCacheDir().getPath() + "/" + city + ".jpg", options);
+        Log.e(TAG, "loadPath " + getCacheDir().getPath() +"/" + city + Constants.IMAGE_EXTENSION);
+        Bitmap bitmap = BitmapFactory.decodeFile(getCacheDir().getPath() + "/" + city + Constants.IMAGE_EXTENSION, options);
         if(bitmap == null)
             return false;
         setImageViewBitmap(bitmap, city);
@@ -115,6 +119,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
                 if(bitmaps != null){
                     for(int i = 0; i < bitmaps.length; i++)
                     setImageViewBitmap(bitmaps[i], i);
+                    setLastUpdateField();
                 }
             }
         });

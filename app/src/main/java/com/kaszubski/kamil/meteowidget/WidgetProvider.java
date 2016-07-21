@@ -193,13 +193,13 @@ public class WidgetProvider extends AppWidgetProvider {
         for(int i = showLegend? 0 : 1; i < 3; i++) {
             int column = i < Constants.MIN_DAY_VALUE? i: currentDay;
             for (int j = 0; j <bitmaps[i].length; j++){
-                if(!(new File(context.getCacheDir(), "" + currentCity + "" + column + "" + j + ".jpg").exists())){
+                if(!(new File(context.getCacheDir(), "" + currentCity + "" + column + "" + j + Constants.IMAGE_EXTENSION).exists())){
                     Log.e(TAG, "FILE NOT EXISTS");
                     return false;
                 } else {
                     if((i != 0 || j != 0) && (i != 1 || j != 0))
                         bitmaps[i][j] = BitmapFactory.decodeFile(context.getCacheDir().getPath() + "/"
-                                + currentCity + column + j + ".jpg", options);
+                                + currentCity + column + j + Constants.IMAGE_EXTENSION, options);
                 }
             }
         }
