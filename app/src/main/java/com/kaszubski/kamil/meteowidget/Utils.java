@@ -168,7 +168,7 @@ public class Utils {
     }
 
     private static void saveBitmapToFile(Context context, Bitmap bitmap, String name){
-        File file = new File(context.getCacheDir(), name + Constants.IMAGE_EXTENSION);
+        File file = new File(context.getFilesDir(), name + Constants.IMAGE_EXTENSION);
         Log.e(TAG, "savePath " + file.getAbsolutePath());
         if (file.exists())
             file.delete();

@@ -104,8 +104,8 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
     private boolean loadBitmapFromFile(int city){
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-        Log.e(TAG, "loadPath " + getCacheDir().getPath() +"/" + city + Constants.IMAGE_EXTENSION);
-        Bitmap bitmap = BitmapFactory.decodeFile(getCacheDir().getPath() + "/" + city + Constants.IMAGE_EXTENSION, options);
+        Log.e(TAG, "loadPath " + getFilesDir().getPath() +"/" + city + Constants.IMAGE_EXTENSION);
+        Bitmap bitmap = BitmapFactory.decodeFile(getFilesDir().getPath() + "/" + city + Constants.IMAGE_EXTENSION, options);
         if(bitmap == null)
             return false;
         setImageViewBitmap(bitmap, city);
