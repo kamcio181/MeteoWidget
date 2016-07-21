@@ -1,10 +1,10 @@
 package com.kaszubski.kamil.meteowidget;
 
+import android.app.Activity;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -13,7 +13,7 @@ import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.Switch;
 
-public class MainActivity extends AppCompatActivity implements CompoundButton.OnCheckedChangeListener{
+public class MainActivity extends Activity implements CompoundButton.OnCheckedChangeListener{
     private static final String TAG = "MainActivity";
 
     private ImageView imageView, imageView2;
@@ -97,8 +97,8 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
 
     private void setLastUpdateField(){
         String lastUpdate =preferences.getString(Constants.LAST_UPDATE, getString(R.string.unknown));
-        if(getSupportActionBar() != null)
-            getSupportActionBar().setSubtitle(getString(R.string.last_updated) + ": " + lastUpdate);
+        if(getActionBar() != null)
+            getActionBar().setSubtitle(getString(R.string.last_updated) + ": " + lastUpdate);
     }
 
     private boolean loadBitmapFromFile(int city){
