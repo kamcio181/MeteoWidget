@@ -3,6 +3,7 @@ package com.kaszubski.kamil.meteowidget;
 public interface Constants {
 
     String IMAGE_EXTENSION = ".png";
+    int NOTIFICATION_ID = 1;
 
     int MIN_CITY_VALUE = 0;
     int WARSAW = 0;

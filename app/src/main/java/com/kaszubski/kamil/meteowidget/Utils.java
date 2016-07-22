@@ -1,5 +1,7 @@
 package com.kaszubski.kamil.meteowidget;
 
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Context;
@@ -9,9 +11,12 @@ import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -25,6 +30,10 @@ public class Utils {
     private static ConnectivityManager connectivityManager;
     private static SharedPreferences preferences;
     private static ImagesDownloaderTask task;
+    private static NotificationManager notificationManager;
+    private static Notification.Builder builder;
+    private static Handler handler;
+    private static int downloadedSize;
 
     public static void showToast(Context context, String message){
         if(toast != null)
@@ -53,6 +62,8 @@ public class Utils {
     public static void downloadGraphs(Context context, OnRefreshTaskFinish listener){
         if(connectivityManager == null)
             connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if(handler == null)
+            handler = new Handler();
 
         NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
         if(networkInfo != null && networkInfo.isConnected()) {
@@ -80,7 +91,13 @@ public class Utils {
         protected Boolean doInBackground(Void... params) {
             String date = String.format("%1$tY%1$tm%1$td", Calendar.getInstance()); // if you want to allow choose cities use array list with dynamically added desired city numbers
             Bitmap bitmap;
+            if(notificationManager == null)
+                notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            if(builder == null)
+                builder = new Notification.Builder(context).setSmallIcon(R.mipmap.ic_launcher);
+
             for(int i = 0; i < Constants.CITY_URL.length; i++){
+                builder.setContentTitle(context.getResources().getStringArray(R.array.cities)[i]).setOngoing(true);
                 bitmap = downloadBitmap(Constants.URL_CONST + date + Constants.CITY_URL[i]);
                 if (isCancelled() || bitmap == null || bitmap.getWidth() < 400 || bitmap.getHeight() < 400) {
                     bitmaps = null;
@@ -110,21 +127,71 @@ public class Utils {
     private static Bitmap downloadBitmap(String url) {
         HttpURLConnection urlConnection = null;
         try {
+            Log.e(TAG, "START");
             URL uri = new URL(url);
             urlConnection = (HttpURLConnection) uri.openConnection();
-
+            Log.e(TAG, "OPEN");
             int statusCode = urlConnection.getResponseCode();
+            Log.e(TAG, "STATUS " + statusCode);
             if (statusCode != HttpURLConnection.HTTP_OK) {
                 return null;
             }
 
-            InputStream inputStream = urlConnection.getInputStream();
-            if (inputStream != null) {
+//            InputStream inputStream = urlConnection.getInputStream();
+//            if (inputStream != null) {
+//                return BitmapFactory.decodeStream(inputStream);
+//            }
 
-                return BitmapFactory.decodeStream(inputStream);
+
+
+            InputStream is = urlConnection.getInputStream();
+            BufferedInputStream bis = new BufferedInputStream(is, 8190);
+            final int totalSize = 1500;
+            downloadedSize = 0;
+            Log.e(TAG, "BIS");
+            byte[] bytes = new byte[1024];
+            ByteArrayOutputStream baf = new ByteArrayOutputStream(1024);
+            int current;
+
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    notificationManager.notify(Constants.NOTIFICATION_ID, builder.setContentText("Downloaded: " + downloadedSize / totalSize + "%").build());
+                    handler.postDelayed(this, 1000);
+                }
+            });
+
+            Runnable cancel = new Runnable() {
+                @Override
+                public void run() {
+                    handler.removeCallbacksAndMessages(null);
+                    notificationManager.cancel(Constants.NOTIFICATION_ID);
+                    task.cancel(true);
+                }
+            };
+
+
+            Log.e(TAG, "BEFORE WHILE");
+            while ((current = bis.read(bytes, 0, 1024)) != -1) {
+                handler.removeCallbacks(cancel);
+                handler.postDelayed(cancel, 30000);
+
+                Log.e(TAG, "WHILE " + downloadedSize);
+                baf.write(bytes, 0, current);
+                downloadedSize += current;
             }
+            Log.e(TAG, "AFTER WHILE");
+            //cancel = true;
+
+            byte[] imageData = baf.toByteArray();
+
+            handler.removeCallbacksAndMessages(null);
+            notificationManager.cancel(Constants.NOTIFICATION_ID);
+            Log.e(TAG, "FINISH");
+            return BitmapFactory.decodeByteArray(imageData, 0, imageData.length);
+
         } catch (Exception e) {
-            Log.d("URLCONNECTIONERROR", e.toString());
+            Log.e("URLCONNECTIONERROR", e.toString());
             if (urlConnection != null) {
                 urlConnection.disconnect();
             }

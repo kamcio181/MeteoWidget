@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -21,6 +22,7 @@ public class MainActivity extends Activity implements CompoundButton.OnCheckedCh
     private Switch aSwitch;
     private SharedPreferences preferences;
     private boolean prefsOrBitmapWasChanged;
+    private Bitmap legend;
 
 
     @Override
@@ -50,12 +52,10 @@ public class MainActivity extends Activity implements CompoundButton.OnCheckedCh
         for(int i = 0; i < Constants.CITY_URL.length; i++){ // if more cities change it to array
             if(!loadBitmapFromFile(i)) {
                 refresh();
+                clearImageViews();
                 break;
             }
         }
-
-        if(!loadBitmapFromFile(Constants.WARSAW) || !loadBitmapFromFile(Constants.LODZ))
-            refresh();
     }
 
     @Override
@@ -95,6 +95,11 @@ public class MainActivity extends Activity implements CompoundButton.OnCheckedCh
         return super.onOptionsItemSelected(item);
     }
 
+    private void clearImageViews(){
+        imageView.setImageBitmap(null);
+        imageView2.setImageBitmap(null);
+    }
+
     private void setLastUpdateField(){
         String lastUpdate =preferences.getString(Constants.LAST_UPDATE, getString(R.string.unknown));
         if(getActionBar() != null)
@@ -106,10 +111,26 @@ public class MainActivity extends Activity implements CompoundButton.OnCheckedCh
         options.inPreferredConfig = Bitmap.Config.ARGB_8888;
         Log.e(TAG, "loadPath " + getFilesDir().getPath() +"/" + city + Constants.IMAGE_EXTENSION);
         Bitmap bitmap = BitmapFactory.decodeFile(getFilesDir().getPath() + "/" + city + Constants.IMAGE_EXTENSION, options);
+
         if(bitmap == null)
             return false;
-        setImageViewBitmap(bitmap, city);
+        Log.e(TAG, "is not null");
+
+
+        setImageViewBitmap(addLegendToBitmap(bitmap), city);
         return true;
+    }
+
+    private Bitmap addLegendToBitmap(Bitmap bitmap){
+        if(legend == null)
+            legend = BitmapFactory.decodeResource(getResources(), R.mipmap.legend);
+
+        Bitmap resultGraph = Bitmap.createBitmap((legend.getWidth() + bitmap.getWidth()), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(resultGraph);
+        canvas.drawBitmap(legend, 0, 0, null);
+        canvas.drawBitmap(bitmap, legend.getWidth(), 0 , null);
+
+        return resultGraph;
     }
 
     private void refresh(){
@@ -118,7 +139,7 @@ public class MainActivity extends Activity implements CompoundButton.OnCheckedCh
             public void onRefreshTaskFinished(Bitmap[] bitmaps) {
                 if(bitmaps != null){
                     for(int i = 0; i < bitmaps.length; i++)
-                    setImageViewBitmap(bitmaps[i], i);
+                    setImageViewBitmap(addLegendToBitmap(bitmaps[i]), i);
                     setLastUpdateField();
                 }
             }
